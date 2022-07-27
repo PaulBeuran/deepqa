@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+notebooks/squad1.1.zip
+notebooks/data/dev-v1.1.json
+notebooks/data/train-v1.1.json
