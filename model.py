@@ -89,7 +89,7 @@ class BiDAF(torch.nn.Module):
         )
 
         if use_dropout and self.dropout_rate is not None:
-            answers_embeddings = torch.Dropout(self.dropout_rate)(answers_embeddings)
+            answers_embeddings = torch.nn.Dropout(self.dropout_rate)(answers_embeddings)
         answers_add_embeddings, _ = self.answer_add_encoder(answers_embeddings)
         answers_end_probs = self.answer_end_decoder(
             torch.cat([contexts_queries_attentions, answers_add_embeddings], dim=2)
