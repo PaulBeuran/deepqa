@@ -1,5 +1,5 @@
 import torch
-import tqdm 
+from tqdm import tqdm 
 from .loss import bi_cross_entropy
 from .metrics import overlap_f1_score
 
