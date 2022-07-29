@@ -3,6 +3,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import torch
 from .tokenizer import BaseTokeniser
 
+if torch.cuda.is_available():
+    torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
 def unwrap_squad11_data(data):
     """

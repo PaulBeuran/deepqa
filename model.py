@@ -3,6 +3,9 @@ from tqdm import tqdm
 from .loss import bi_cross_entropy
 from .metrics import overlap_f1_score
 
+if torch.cuda.is_available():
+    torch.set_default_tensor_type('torch.cuda.FloatTensor')
+
 class ContextQueryAttention(torch.nn.Module):
 
     def __init__(self,
