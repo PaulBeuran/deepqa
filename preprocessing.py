@@ -1,5 +1,8 @@
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
+import torch
+from .tokenizer import BaseTokeniser
+
 
 def unwrap_squad11_data(data):
     """
@@ -23,55 +26,64 @@ def unwrap_squad11_data(data):
     queries = list()
     answers = list()
     for subject in data:
-            title = subject["title"]
-            titles.append(title)
-            paragraphs = subject["paragraphs"]
-            for paragraph in paragraphs:
-                context = paragraph["context"]
-                contexts.append(context)
-                qas = paragraph["qas"]
-                for qa in qas:
-                    question = qa["question"]
-                    answer = qa["answers"][0]["text"]
-                    queries.append(question)
-                    answers.append(answer)
+        title = subject["title"]
+        titles.append(title)
+        paragraphs = subject["paragraphs"]
+        for paragraph in paragraphs:
+            context = paragraph["context"]
+            contexts.append(context)
+            qas = paragraph["qas"]
+            for qa in qas:
+                question = qa["question"]
+                answer = qa["answers"][0]["text"]
+                queries.append(question)
+                answers.append(answer)
     return titles, contexts, queries, answers
 
 
-def tabularize_squad11_data(data):
+def tabularize_squad11_data(data, row_wise_output=False):
     """
     Tabularize the SQuAD1.1 data dictionary into a list of examples,
-    constitued of a tuple of subject title, a context, a query, and an answer.
+    constitued of four equally-sized unwrapped lists by default, else 
+    a list of tuples of subject title, a context, a query, and an answer
+    if a row-wise output is prefered.
 
     Parameters
     ----------
     data : dict
         SQuAD1.1 data dictionary
+    row_wise_output, default=False
+        Specify the output type, either column-wise by default (a tuple of equally-sized
+        lists of titles, contexts, queries and answers respectively), or row-wise (a list of
+        tuples containing each a title, a context, a query and an answer).
 
     Returns
     -------
-    list
-        A list  of examples, constitued of a tuple of subject title, 
-        a context, a query, and an answer.
+    tuple or list
+        A tuple of titles, contexts, questions and answers or
+        a list of tuples containing each a title, a context, a query and an answer
     """
     titles = list()
     contexts = list()
     queries = list()
     answers = list()
     for subject in data:
-            title = subject["title"]
-            paragraphs = subject["paragraphs"]
-            for paragraph in paragraphs:
-                context = paragraph["context"]
-                qas = paragraph["qas"]
-                for qa in qas:
-                    question = qa["question"]
-                    answer = qa["answers"][0]
-                    titles.append(title)
-                    queries.append(question)
-                    contexts.append(context)
-                    answers.append(answer)
-    return list(zip(titles, contexts, queries, answers))
+        title = subject["title"]
+        paragraphs = subject["paragraphs"]
+        for paragraph in paragraphs:
+            context = paragraph["context"]
+            qas = paragraph["qas"]
+            for qa in qas:
+                question = qa["question"]
+                answer = qa["answers"][0]
+                titles.append(title)
+                queries.append(question)
+                contexts.append(context)
+                answers.append(answer)
+    if row_wise_output:
+        return list(zip(titles, contexts, queries, answers))
+    else:
+        return titles, contexts, queries, answers
 
 
 def get_corpus_tf_idf_word_frequencies(corpus, **tf_idf_vectorizer_kwargs):
@@ -101,9 +113,35 @@ def get_corpus_tf_idf_word_frequencies(corpus, **tf_idf_vectorizer_kwargs):
     terms_tf_idf = (
         dict(
             zip(
-                list(tf_idf_vectorizer.vocabulary_.keys()), 
+                list(tf_idf_vectorizer.vocabulary_.keys()),
                 tf_idf_by_terms[list(tf_idf_vectorizer.vocabulary_.values())]
             )
         )
     )
     return terms_tf_idf
+
+def tokenize_squad_11_data(data, tokenizer, context_max_length, query_max_length):
+
+    _, contexts, queries, answers = tabularize_squad11_data(data)
+    contexts_token_ids = tokenizer(contexts, max_length=context_max_length)
+    queries_token_ids = tokenizer(queries, max_length=query_max_length)
+    answers_char_ranges = [(answer["answer_start"], answer["answer_start"] + len(answer["text"]))
+                           for answer in answers]
+    answers_token_ranges = tokenizer.char_ranges_to_token_ranges(
+        contexts, answers_char_ranges, max_length=context_max_length
+    )
+    return contexts_token_ids, queries_token_ids, answers_token_ranges
+
+class QADataset(torch.utils.data.Dataset):
+    def __init__(self, contexts, queries, answers):
+        self.contexts = contexts
+        self.queries = queries
+        self.answers = answers
+
+    def __getitem__(self, index):
+        return (self.contexts[index], 
+                self.queries[index], 
+                self.answers[index])
+
+    def __len__(self):
+        return len(self.contexts)
