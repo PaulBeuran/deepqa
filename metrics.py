@@ -1,8 +1,5 @@
 import torch
 
-if torch.cuda.is_available():
-    torch.set_default_tensor_type('torch.cuda.FloatTensor')
-
 def overlap_f1_score(y_true, y_pred, **kwargs):
   with torch.no_grad():
     y_true_start, y_true_end = y_true[:, 0], y_true[:, 1]

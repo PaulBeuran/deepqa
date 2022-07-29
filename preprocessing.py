@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 import torch
 from .tokenizer import BaseTokeniser
+from .utils import char_ranges_to_token_ranges
 
 if torch.cuda.is_available():
     torch.set_default_tensor_type('torch.cuda.FloatTensor')
@@ -125,12 +126,12 @@ def get_corpus_tf_idf_word_frequencies(corpus, **tf_idf_vectorizer_kwargs):
 def tokenize_squad_11_data(data, tokenizer, context_max_length, query_max_length):
 
     _, contexts, queries, answers = tabularize_squad11_data(data)
-    contexts_token_ids = tokenizer(contexts, max_length=context_max_length)
-    queries_token_ids = tokenizer(queries, max_length=query_max_length)
+    contexts_token_ids, contexts_offset_mappings = tokenizer(contexts, context_max_length)
+    queries_token_ids, _ = tokenizer(queries, max_length=query_max_length)
     answers_char_ranges = [(answer["answer_start"], answer["answer_start"] + len(answer["text"]))
                            for answer in answers]
-    answers_token_ranges = tokenizer.char_ranges_to_token_ranges(
-        contexts, answers_char_ranges, max_length=context_max_length
+    answers_token_ranges = char_ranges_to_token_ranges(
+        answers_char_ranges, contexts_offset_mappings, context_max_length
     )
     return contexts_token_ids, queries_token_ids, answers_token_ranges
 
@@ -147,3 +148,4 @@ class QADataset(torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self.contexts)
+
