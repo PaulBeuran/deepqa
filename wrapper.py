@@ -37,7 +37,7 @@ class QATrainWrapper(torch.nn.Module):
                 for i, batch in enumerate(data_iter_tqdm):
                     with torch.no_grad():
                         contexts_token_ids, queries_token_ids, answers_tokens_ids = batch
-                        answers_probs = self.model([contexts_token_ids, queries_token_ids])
+                        answers_probs = self.model([contexts_token_ids, queries_token_ids], use_dropout=False)
                         answer_preds = answers_probs.argmax(dim=1)
                         loss_step = loss(answers_probs, answers_tokens_ids)
                         epoch_total_loss += loss_step.item()

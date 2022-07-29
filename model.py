@@ -6,13 +6,15 @@ class BiDAF(torch.nn.Module):
     def __init__(self, 
                 word_encoder, 
                 char_encoder, 
-                contextual_embedding_size):
+                contextual_embedding_size,
+                dropout_rate=None):
         
         super(BiDAF, self).__init__()
         self.word_encoder = word_encoder
         self.char_encoder = char_encoder
         self.word_embedding_size = self.word_encoder.weight.shape[1]
         self.contextual_embedding_size = contextual_embedding_size
+        self.dropout_rate = dropout_rate
         self.context_encoder = torch.nn.LSTM(
             input_size = self.word_embedding_size,
             hidden_size = self.contextual_embedding_size,
@@ -56,7 +58,7 @@ class BiDAF(torch.nn.Module):
             torch.nn.Flatten()
         )
 
-    def forward(self, x):
+    def forward(self, x, use_dropout=False):
 
         contexts_token_ids, queries_token_ids = x
         with torch.no_grad():
@@ -65,15 +67,29 @@ class BiDAF(torch.nn.Module):
         if self.char_encoder is not None:
             # TODO
             pass
+        
+        if use_dropout and self.dropout_rate is not None:
+            contexts_word_embeddings = torch.Dropout(self.dropout_rate)(contexts_word_embeddings)
+            queries_word_embeddings = torch.Dropout(self.dropout_rate)(queries_word_embeddings)
         contexts_embeddings, _ = self.context_encoder(contexts_word_embeddings)
         queries_embeddings, _ = self.query_encoder(queries_word_embeddings)
+
+        if use_dropout and self.dropout_rate is not None:
+            contexts_embeddings = torch.Dropout(self.dropout_rate)(contexts_embeddings)
+            queries_embeddings = torch.Dropout(self.dropout_rate)(queries_embeddings)
         contexts_queries_attentions = self.context_query_attention_encoder(
             [contexts_embeddings, queries_embeddings]
         )
+
+        if use_dropout and self.dropout_rate is not None:
+            contexts_queries_attentions = torch.Dropout(self.dropout_rate)(contexts_queries_attentions)
         answers_embeddings, _ = self.answer_encoder(contexts_queries_attentions)
         answers_start_probs = self.answer_start_decoder(
             torch.cat([contexts_queries_attentions, answers_embeddings], dim=2)
         )
+
+        if use_dropout and self.dropout_rate is not None:
+            answers_embeddings = torch.Dropout(self.dropout_rate)(answers_embeddings)
         answers_add_embeddings, _ = self.answer_add_encoder(answers_embeddings)
         answers_end_probs = self.answer_end_decoder(
             torch.cat([contexts_queries_attentions, answers_add_embeddings], dim=2)
