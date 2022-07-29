@@ -135,17 +135,3 @@ def tokenize_squad_11_data(data, tokenizer, context_max_length, query_max_length
     )
     return contexts_token_ids, queries_token_ids, answers_token_ranges
 
-class QADataset(torch.utils.data.Dataset):
-    def __init__(self, contexts, queries, answers):
-        self.contexts = contexts
-        self.queries = queries
-        self.answers = answers
-
-    def __getitem__(self, index):
-        return (self.contexts[index], 
-                self.queries[index], 
-                self.answers[index])
-
-    def __len__(self):
-        return len(self.contexts)
-
