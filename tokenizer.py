@@ -75,8 +75,8 @@ class TokenCharTokenizer():
                         (max_length + offset_mappings[i,j,0] - offset_mappings[i,j,1]) * [padding_token_id]
                         for j in range(offset_mappings.shape[1])]
                        for i, text in enumerate(corpus)])
-        char_token_ids = np.asarray(char_token_ids, dtype=np.int32)
-        char_token_ids = torch.from_numpy(char_token_ids)
+        #char_token_ids = np.asarray(char_token_ids, dtype=np.int32)
+        char_token_ids = torch.tensor(char_token_ids)
         return char_token_ids
 
     def __len__(self):
