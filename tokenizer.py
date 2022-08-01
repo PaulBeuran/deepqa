@@ -69,10 +69,10 @@ class TokenCharTokenizer():
         padding_token_id = len(self) + 2
         char_token_ids = (
                       [[list(map(self.char_token_id_mapping.get, 
-                                 text[slice(low_bound := offset_mappings[i,j,0], 
-                                            high_bound := offset_mappings[i,j,1])],
-                                 (high_bound - low_bound) * [unknown_token_id])) + 
-                        (max_length + low_bound - high_bound) * [padding_token_id]
+                                 text[slice(offset_mappings[i,j,0], 
+                                            offset_mappings[i,j,1])],
+                                 (offset_mappings[i,j,1] - offset_mappings[i,j,0]) * [unknown_token_id])) + 
+                        (max_length + offset_mappings[i,j,0] - offset_mappings[i,j,1]) * [padding_token_id]
                         for j in range(offset_mappings.shape[1])]
                        for i, text in enumerate(corpus)])
         char_token_ids = np.asarray(char_token_ids, dtype=np.int32)
