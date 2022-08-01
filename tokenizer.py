@@ -36,7 +36,7 @@ class HFAutoTokenizer(BaseTokeniser):
         if self.char_tokenizer is not None:
             tokens["inputs_char_ids"] = self.char_tokenizer(
                                             texts,
-                                            tokens["offset_mapping"].detach().numpy(), 
+                                            tokens["offset_mapping"].cpu().detach().numpy(), 
                                             token_max_length
                                         )
         return tokens
