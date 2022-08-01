@@ -3,16 +3,14 @@ from .module import ContextQueryAttention
 
 class BiDAF(torch.nn.Module):
 
-    def __init__(self, 
-                word_encoder, 
-                char_encoder, 
-                contextual_embedding_size,
-                dropout_rate=None):
+    def __init__(self,
+                 word_encoder,
+                 contextual_embedding_size,
+                 dropout_rate=None):
         
         super(BiDAF, self).__init__()
         self.word_encoder = word_encoder
-        self.char_encoder = char_encoder
-        self.word_embedding_size = self.word_encoder.weight.shape[1]
+        self.word_embedding_size = self.word_encoder.output_shape()
         self.contextual_embedding_size = contextual_embedding_size
         self.dropout_rate = dropout_rate
         self.context_encoder = torch.nn.LSTM(
@@ -59,14 +57,10 @@ class BiDAF(torch.nn.Module):
         )
 
     def forward(self, x, use_dropout=False):
-
-        contexts_token_ids, queries_token_ids = x
-        with torch.no_grad():
-            contexts_word_embeddings = self.word_encoder(contexts_token_ids)
-            queries_word_embeddings = self.word_encoder(queries_token_ids)
-        if self.char_encoder is not None:
-            # TODO
-            pass
+        
+        contexts_tokens, queries_tokens = x
+        contexts_word_embeddings = self.word_encoder(contexts_tokens)
+        queries_word_embeddings = self.word_encoder(queries_tokens)
         
         if use_dropout and self.dropout_rate is not None:
             contexts_word_embeddings = torch.nn.Dropout(self.dropout_rate)(contexts_word_embeddings)

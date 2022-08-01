@@ -1,4 +1,73 @@
 import torch
+import transformers
+        
+class CharCNN(torch.nn.Module):
+
+    def __init__(self, 
+                 in_channels,
+                 outs_channels,
+                 kernel_sizes):
+
+        super(CharCNN, self).__init__()
+        self.in_channels = in_channels
+        self.outs_channels = outs_channels
+        self.kernel_sizes = kernel_sizes
+        self.conv1d_list = list()
+        for i, kernel_size in enumerate(kernel_sizes):
+            conv1d = torch.nn.Conv1d(in_channels, outs_channels[i], kernel_size)
+            setattr(self, f"conv{i+1}", conv1d)
+            self.conv1d_list.append(conv1d)
+
+    def forward(self, char_embeddings):
+
+        batch_size = char_embeddings.shape[0]
+        token_seq_size = char_embeddings.shape[1]
+        token_char_seq_size = char_embeddings.shape[2]
+        features_size = char_embeddings.shape[3]
+        
+        rav_char_embeddings = (char_embeddings.transpose(3, 2)
+                                              .reshape(batch_size * token_seq_size,
+                                                       features_size,
+                                                       token_char_seq_size))
+        rav_char_embeddings = torch.cat(
+            [torch.nn.Tanh()(conv1d(rav_char_embeddings)).max(dim=2)[0]
+             for conv1d in self.conv1d_list],
+             dim=1
+        ).reshape(batch_size, token_seq_size, -1)
+        return rav_char_embeddings
+
+class HFAutoWordEncoder(torch.nn.Module):
+
+    def __init__(self, word_encoder_path, 
+                 char_vocab_len=None, char_embedding_size=None, 
+                 char_encoder=None):
+        
+        super(HFAutoWordEncoder, self).__init__()
+        self.word_encoder = (transformers.AutoModel.from_pretrained(word_encoder_path)
+                                                   .embeddings
+                                                   .word_embeddings)
+        if char_encoder is not None:
+            self.char_encoder = torch.nn.Sequential(
+                torch.nn.Embedding(char_vocab_len + 3, 
+                                   char_embedding_size, 
+                                   char_vocab_len + 2),
+                char_encoder
+            )
+    
+    def forward(self, tokens):
+
+        word_encoding = self.word_encoder(tokens["input_ids"])
+        if self.char_encoder is not None:
+            char_encoding = self.char_encoder(tokens["inputs_char_ids"])
+            word_encoding = torch.cat([word_encoding, char_encoding], dim=2)
+        return word_encoding
+
+    def output_shape(self):
+
+        return (self.word_encoder.weight.shape[1] + 
+                sum([conv.weight.shape[0] 
+                     for conv in self.char_encoder[1].conv1d_list])
+)
 
 class ContextQueryAttention(torch.nn.Module):
 
