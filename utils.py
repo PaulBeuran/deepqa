@@ -16,7 +16,7 @@ class QADataset(torch.utils.data.Dataset):
 
 def char_ranges_to_token_ranges(char_ranges, offset_mappings, max_length):
 
-    char_ranges_arr = torch.tensor(char_ranges)
+    char_ranges_arr = torch.tensor(char_ranges, device="cpu")
     token_ranges = (
         (
             char_ranges_arr.unsqueeze(dim=1)
