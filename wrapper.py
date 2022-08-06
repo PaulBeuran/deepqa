@@ -25,17 +25,17 @@ class QATrainWrapper(torch.nn.Module):
         train_dataset_len = len(train_data_iter.dataset)
         train_batch_size = train_data_iter.batch_size
         train_loader_n_iter = len(train_data_iter)
-        train_loss_by_epochs = np.array((epochs * train_dataset_len, 2))
+        train_loss_by_epochs = np.zeros((epochs * train_dataset_len, 2))
         train_loss_by_epochs[:, 0] = np.repeat(np.arange(epochs), train_dataset_len)
-        train_metrics_by_epochs = np.array((epochs * train_dataset_len, len(metrics) + 1))
+        train_metrics_by_epochs = np.zeros((epochs * train_dataset_len, len(metrics) + 1))
         train_metrics_by_epochs[:, 0] = np.repeat(np.arange(epochs), train_dataset_len)
         if val_data_iter is not None:
             val_dataset_len = len(val_data_iter.dataset)
             val_batch_size = val_data_iter.batch_size
             val_loader_n_iter = len(val_data_iter)
-            val_loss_by_epochs = np.array((epochs * val_dataset_len, 2))
+            val_loss_by_epochs = np.zeros((epochs * val_dataset_len, 2))
             val_loss_by_epochs[:, 0] = np.repeat(np.arange(epochs), val_dataset_len)
-            val_metrics_by_epochs = np.array((epochs * val_dataset_len, len(metrics) + 1))
+            val_metrics_by_epochs = np.zeros((epochs * val_dataset_len, len(metrics) + 1))
             val_metrics_by_epochs[:, 0] = np.repeat(np.arange(epochs), val_dataset_len)
             
         for epoch in range(epochs):
