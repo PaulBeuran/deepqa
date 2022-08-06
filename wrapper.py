@@ -59,8 +59,8 @@ class QATrainWrapper(torch.nn.Module):
                              train_batch_size if i+1 != train_loader_n_iter 
                                               else train_dataset_len % train_batch_size)
                 batch_slice = slice(min_slice, max_slice)
-                train_loss_by_epochs[batch_slice, 1] = loss_batch.to("cpu").numpy()
-                train_metrics_by_epochs[batch_slice, 1:] = metrics_batch.to("cpu").numpy()
+                train_loss_by_epochs[batch_slice, 1] = loss_batch.to("cpu").detach().numpy()
+                train_metrics_by_epochs[batch_slice, 1:] = metrics_batch.to("cpu").detach().numpy()
                 epoch_total_loss += loss_step.to("cpu").item()
                 epoch_total_metrics = {k : epoch_total_metrics[k] +
                                            metrics_batch_dict[k].mean().to("cpu").item()
@@ -89,8 +89,8 @@ class QATrainWrapper(torch.nn.Module):
                                     val_batch_size if i+1 != val_loader_n_iter 
                                                     else val_dataset_len % val_batch_size)
                         batch_slice = slice(min_slice, max_slice)
-                        val_loss_by_epochs[batch_slice, 1] = loss_batch.to("cpu").numpy()
-                        val_metrics_by_epochs[batch_slice, 1:] = metrics_batch.to("cpu").numpy()
+                        val_loss_by_epochs[batch_slice, 1] = loss_batch.to("cpu").detach().numpy()
+                        val_metrics_by_epochs[batch_slice, 1:] = metrics_batch.to("cpu").detach().numpy()
                         epoch_total_loss += loss_step.to("cpu").item()
                         epoch_total_metrics = {k : epoch_total_metrics[k] +
                                                 metrics_batch_dict[k].mean().to("cpu").item()

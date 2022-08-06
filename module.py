@@ -19,13 +19,16 @@ class GLoVEWordEncoder(torch.nn.Module):
     def forward(self, tokens):
 
         word_embeddings = self.word_embeddings(tokens["input_ids"])
+        if self.char_encoder is not None:
+            char_embedings = self.char_encoder(tokens["inputs_char_ids"])
+            word_embeddings = torch.cat(word_embeddings, char_embedings, dim=2)
         return word_embeddings
 
     def output_shape(self):
         output_shape = self.word_embeddings.weight.shape[1]
         if self.char_encoder is not None:
             output_shape = output_shape + self.char_encoder.output_shape()
-        return self.word_embeddings.weight.shape[1]
+        return output_shape
 
 
 class CharCNN(torch.nn.Module):
