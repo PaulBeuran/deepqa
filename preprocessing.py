@@ -1,7 +1,6 @@
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 import torch
-from .tokenizer import BaseTokeniser
 from .utils import char_ranges_to_token_ranges
 
 if torch.cuda.is_available():

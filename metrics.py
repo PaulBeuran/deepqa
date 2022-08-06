@@ -2,7 +2,7 @@ import torch
 
 def exact_match(y_true, y_pred, **kwargs):
     with torch.no_grad():
-        return (y_true == y_pred).all(dim=1).float().mean().item()
+        return (y_true == y_pred).all(dim=1).float()
 
 def overlap_f1_score(y_true, y_pred, **kwargs):
   with torch.no_grad():
@@ -18,4 +18,4 @@ def overlap_f1_score(y_true, y_pred, **kwargs):
     precision = tp/(tp+fp)
     recall = tp/(tp+fn)
     f1 = torch.nan_to_num(2 * precision * recall / (precision + recall))
-    return f1.mean().item()
+    return f1

@@ -1,19 +1,5 @@
 import torch
 
-class QADataset(torch.utils.data.Dataset):
-    def __init__(self, contexts, queries, answers):
-        self.contexts = contexts
-        self.queries = queries
-        self.answers = answers
-
-    def __getitem__(self, index):
-        return {"contexts": self.contexts[index], 
-                "queries": self.queries[index], 
-                "answers": self.answers[index]}
-
-    def __len__(self):
-        return len(self.contexts)
-
 def char_ranges_to_token_ranges(char_ranges, offset_mappings, max_length):
 
     char_ranges_arr = torch.tensor(char_ranges, device="cpu")
@@ -29,20 +15,23 @@ def char_ranges_to_token_ranges(char_ranges, offset_mappings, max_length):
     )
     return token_ranges
 
-class QADictDataset(torch.utils.data.Dataset):
+class QADataset(torch.utils.data.Dataset):
 
-    def __init__(self, contexts_tokens, queries_tokens, answers_tokens_range):
+    def __init__(self, contexts_tokens, queries_tokens, answers_tokens_range,
+                 device = "cpu"):
 
-        self.contexts_tokens = contexts_tokens
-        self.queries_tokens = queries_tokens
-        self.answers_tokens_range = answers_tokens_range
+        to_remove = ~(contexts_tokens["truncated"] | queries_tokens["truncated"])
+        self.contexts_tokens = {k:v[to_remove] for k,v in contexts_tokens.items()}
+        self.queries_tokens = {k:v[to_remove] for k,v in queries_tokens.items()}
+        self.answers_tokens_range = answers_tokens_range[to_remove]
+        self.device = device
 
     def __getitem__(self, index):
-        return {"contexts_tokens": {k:v[index]
+        return {"contexts_tokens": {k:v[index].to(self.device)
                                     for k,v in self.contexts_tokens.items()},
-                "queries_tokens": {k:v[index]
+                "queries_tokens": {k:v[index].to(self.device)
                                     for k,v in self.queries_tokens.items()},
-                "answers_tokens_range": self.answers_tokens_range[index]}
+                "answers_tokens_range": self.answers_tokens_range[index].to(self.device)}
 
     def __len__(self):
         return len(self.answers_tokens_range)
