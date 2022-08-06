@@ -53,7 +53,7 @@ class QATrainWrapper(torch.nn.Module):
                 self.optimizer.step()
                 metrics_batch_dict = {k : metric(answer_preds, answers_tokens_range)
                                       for k,metric in metrics.items()}
-                metrics_batch = torch.cat(list(metrics_batch_dict.values()), axis=1)            
+                metrics_batch = torch.stack(list(metrics_batch_dict.values()), axis=1)            
                 min_slice = (train_loader_n_iter * epoch) + (train_batch_size * i)
                 max_slice = ((train_loader_n_iter * epoch) + (train_batch_size * i) +
                              train_batch_size if i+1 != train_loader_n_iter 
@@ -83,7 +83,7 @@ class QATrainWrapper(torch.nn.Module):
                         loss_step = loss_batch.mean()
                         metrics_batch_dict = {k : metric(answer_preds, answers_tokens_range)
                                             for k,metric in metrics.items()}
-                        metrics_batch = torch.cat(list(metrics_batch_dict.values()), axis=1)            
+                        metrics_batch = torch.stack(list(metrics_batch_dict.values()), axis=1)            
                         min_slice = (val_loader_n_iter * epoch) + (val_batch_size * i)
                         max_slice = ((val_loader_n_iter * epoch) + (val_batch_size * i) +
                                     val_batch_size if i+1 != val_loader_n_iter 
