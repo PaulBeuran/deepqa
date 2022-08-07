@@ -54,10 +54,10 @@ class QATrainWrapper(torch.nn.Module):
                 metrics_batch_dict = {k : metric(answer_preds, answers_tokens_range)
                                       for k,metric in metrics.items()}
                 metrics_batch = torch.stack(list(metrics_batch_dict.values()), axis=1)            
-                min_slice = (train_loader_n_iter * epoch) + (train_batch_size * i)
-                max_slice = ((train_loader_n_iter * epoch) + (train_batch_size * i) +
-                             train_batch_size if i+1 != train_loader_n_iter 
-                                              else train_dataset_len % train_batch_size)
+                min_slice = (train_dataset_len * epoch) + (train_batch_size * i)
+                max_slice = ((train_dataset_len * epoch) + (train_batch_size * i) +
+                             (train_batch_size if i+1 != train_loader_n_iter 
+                                              else train_dataset_len % train_batch_size))
                 batch_slice = slice(min_slice, max_slice)
                 train_loss_by_epochs[batch_slice, 1] = loss_batch.to("cpu").detach().numpy()
                 train_metrics_by_epochs[batch_slice, 1:] = metrics_batch.to("cpu").detach().numpy()
@@ -84,10 +84,10 @@ class QATrainWrapper(torch.nn.Module):
                         metrics_batch_dict = {k : metric(answer_preds, answers_tokens_range)
                                             for k,metric in metrics.items()}
                         metrics_batch = torch.stack(list(metrics_batch_dict.values()), axis=1)            
-                        min_slice = (val_loader_n_iter * epoch) + (val_batch_size * i)
-                        max_slice = ((val_loader_n_iter * epoch) + (val_batch_size * i) +
-                                    val_batch_size if i+1 != val_loader_n_iter 
-                                                    else val_dataset_len % val_batch_size)
+                        min_slice = (val_dataset_len * epoch) + (val_batch_size * i)
+                        max_slice = ((val_dataset_len * epoch) + (val_batch_size * i) +
+                                    (val_batch_size if i+1 != val_loader_n_iter 
+                                                    else val_dataset_len % val_batch_size))
                         batch_slice = slice(min_slice, max_slice)
                         val_loss_by_epochs[batch_slice, 1] = loss_batch.to("cpu").detach().numpy()
                         val_metrics_by_epochs[batch_slice, 1:] = metrics_batch.to("cpu").detach().numpy()

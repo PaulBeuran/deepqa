@@ -21,7 +21,7 @@ class GLoVEWordEncoder(torch.nn.Module):
         word_embeddings = self.word_embeddings(tokens["input_ids"])
         if self.char_encoder is not None:
             char_embedings = self.char_encoder(tokens["inputs_char_ids"])
-            word_embeddings = torch.cat(word_embeddings, char_embedings, dim=2)
+            word_embeddings = torch.cat([word_embeddings, char_embedings], dim=2)
         return word_embeddings
 
     def output_shape(self):
